@@ -10,9 +10,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SendSafely</RootNamespace>
     <AssemblyName>SendsafelyAPI</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFramework>net5.0</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <LangVersion>latestmajor</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -177,8 +178,8 @@
     <Compile Include="Utilities\StartupUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="dll\" />
-    <Folder Include="Enums\" />
+    <PackageReference Include="BouncyCastle" Version="1.8.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
