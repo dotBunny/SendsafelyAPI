@@ -9,12 +9,13 @@ namespace SendSafely.Utilities
 {
     class DownloadFileUtility
     {
+        public static int BufferSize = 1024;
+        
         private PackageInformation pkgInfo;
         private Directory directoryInfo;
         private ISendSafelyProgress progress;
         private Connection connection;
         private String downloadAPI;
-        private int BUFFER_SIZE = 1024;
         private String password;
 
         public DownloadFileUtility(Connection connection, PackageInformation pkgInfo, ISendSafelyProgress progress, String downloadAPI, String password)
@@ -104,10 +105,10 @@ namespace SendSafely.Utilities
             {
                 using (StreamReader objReader = new StreamReader(objStream))
                 {
-                    byte[] tmp = new byte[BUFFER_SIZE];
+                    byte[] tmp = new byte[BufferSize];
                     int l;
 
-                    while ((l = objStream.Read(tmp, 0, BUFFER_SIZE)) != 0)
+                    while ((l = objStream.Read(tmp, 0, BufferSize)) != 0)
                     {
                         progressStream.Write(tmp, 0, l);
                     }

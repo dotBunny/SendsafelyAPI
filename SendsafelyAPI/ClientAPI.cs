@@ -1673,5 +1673,9 @@ namespace SendSafely
             }
         }
 
+        public void SetDownloadBufferSize(int size)
+        {
+            DownloadFileUtility.BufferSize = size;
+        }
     }
 }
