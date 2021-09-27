@@ -12,7 +12,7 @@ namespace SendSafely.Utilities
 {
     class FileUploader
     {
-        public static int BufferSize = 1024;
+        public static int BufferSize = 4096;
         
         private Endpoint p;
         private ISendSafelyProgress progress;

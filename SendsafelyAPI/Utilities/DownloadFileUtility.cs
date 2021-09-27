@@ -9,7 +9,7 @@ namespace SendSafely.Utilities
 {
     class DownloadFileUtility
     {
-        public static int BufferSize = 1024;
+        public static int BufferSize = 4096;
         
         private PackageInformation pkgInfo;
         private Directory directoryInfo;
