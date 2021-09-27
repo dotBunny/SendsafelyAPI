@@ -51,18 +51,15 @@ namespace SendSafely.Utilities
             {
                 for (int i = 1; i <= fileToDownload.Parts; i++)
                 {
-                    FileInfo tmpFile = createTempFile();
-                    using (FileStream segmentStream = tmpFile.OpenWrite())
+                    // Reserve in ~3mb blocks
+                    MemoryStream memoryStream = new MemoryStream(3072000);
+                    using (ProgressStream progressStream = new ProgressStream(memoryStream, progress, "Downloading", fileToDownload.FileSize, 0))
                     {
-                        using (ProgressStream progressStream = new ProgressStream(segmentStream, progress, "Downloading", fileToDownload.FileSize, 0))
-                        {
-                            DownloadSegment(progressStream, p, i, cachedChecksum);
-                        }
+                        DownloadSegment(progressStream, p, i, cachedChecksum);
                     }
-                    using (FileStream segmentStream = tmpFile.OpenRead())
-                    {
-                        DecryptFile(segmentStream, decryptedFileStream);
-                    }
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    DecryptFile(memoryStream, decryptedFileStream);
+                    memoryStream.Close();
                 }
             }
 
