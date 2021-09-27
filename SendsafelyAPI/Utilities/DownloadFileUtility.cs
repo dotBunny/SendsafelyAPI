@@ -43,6 +43,10 @@ namespace SendSafely.Utilities
             FileInfo newFile = createTempFile(fileToDownload);
 
             Endpoint p = createEndpoint(pkgInfo, fileId);
+            
+            CryptUtility cu = new CryptUtility();
+            string cachedChecksum = cu.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
+            
             using (FileStream decryptedFileStream = newFile.OpenWrite())
             {
                 for (int i = 1; i <= fileToDownload.Parts; i++)
@@ -52,10 +56,9 @@ namespace SendSafely.Utilities
                     {
                         using (ProgressStream progressStream = new ProgressStream(segmentStream, progress, "Downloading", fileToDownload.FileSize, 0))
                         {
-                            DownloadSegment(progressStream, p, i);
+                            DownloadSegment(progressStream, p, i, cachedChecksum);
                         }
                     }
-                    String dataToDecrypt = System.IO.File.ReadAllText(tmpFile.FullName);
                     using (FileStream segmentStream = tmpFile.OpenRead())
                     {
                         DecryptFile(segmentStream, decryptedFileStream);
@@ -91,11 +94,11 @@ namespace SendSafely.Utilities
             cu.DecryptFile(decryptedFile, encryptedFile, getDecryptionKey());
         }
 
-        private void DownloadSegment(Stream progressStream, Endpoint p, int part)
+        private void DownloadSegment(Stream progressStream, Endpoint p, int part, string cachedChecksum = null)
         {
             DownloadFileRequest request = new DownloadFileRequest();
             request.Api = this.downloadAPI;
-            request.Checksum = createChecksum();
+            request.Checksum = cachedChecksum ?? createChecksum();
             request.Part = part;
             if (this.password != null) {
                 request.Password = this.password;
