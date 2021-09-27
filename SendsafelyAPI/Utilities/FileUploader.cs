@@ -12,12 +12,14 @@ namespace SendSafely.Utilities
 {
     class FileUploader
     {
+        public static int BufferSize = 1024;
+        
         private Endpoint p;
         private ISendSafelyProgress progress;
         private Connection connection;
         private String CRLF = "\r\n";
         private String CHARSET = "UTF-8";
-        private int BUFFER_SIZE = 1024;
+        
         private int UPLOAD_RETRY_ATTEMPTS = 5;
         private StandardResponse response;
         private String boundary;
@@ -156,13 +158,13 @@ namespace SendSafely.Utilities
             Write(GetFileSegmentStart(filename), output);
             output.Flush();
 
-            byte[] tmp = new byte[BUFFER_SIZE];
+            byte[] tmp = new byte[BufferSize];
             int l;
 
             // Wrap the stream to get some progress updates..
             long uploadedBytes = 0;
 
-            while ((l = input.Read(tmp, 0, BUFFER_SIZE)) != 0)
+            while ((l = input.Read(tmp, 0, BufferSize)) != 0)
             {
                 output.Write(tmp, 0, l);
                 output.Flush();

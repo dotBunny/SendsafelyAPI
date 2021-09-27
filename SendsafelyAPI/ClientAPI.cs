@@ -1677,5 +1677,10 @@ namespace SendSafely
         {
             DownloadFileUtility.BufferSize = size;
         }
+
+        public void SetUploadBufferSize(int size)
+        {
+            FileUploader.BufferSize = size;
+        }
     }
 }
