@@ -1,6 +1,8 @@
 # SendsafelyAPI
 An optimized fork of [SendSafely's API for .NET](https://github.com/SendSafely/Windows-Client-API).
 
+> Removes architectural roadblocks to achieving optimal performance.
+
 ## Modifications
 ### Downloading
 - Cached numerous operations
