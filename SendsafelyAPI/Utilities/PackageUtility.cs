@@ -6,13 +6,14 @@ using SendSafely.Exceptions;
 using SendSafely.Utilities;
 using System.IO;
 using System.Collections.Specialized;
+using System.Threading.Tasks;
 
 namespace SendSafely
 {
     internal class PackageUtility
     {
         private Connection connection;
-        private long SEGMENT_SIZE = 2621440;
+        public const long SEGMENT_SIZE = 2621440;
 
         #region Constructors
         
@@ -457,6 +458,7 @@ namespace SendSafely
             return EncryptAndUploadFile(packageInfo, directoryId, path, progress, uploadType);
         }
 
+        private Object _progressLock = new ();
         public File EncryptAndUploadFile(PackageInformation packageInfo, String directoryId, String path, ISendSafelyProgress progress, String uploadType)
         {
             if (packageInfo == null)
@@ -496,9 +498,6 @@ namespace SendSafely
                 p.Path = p.Path.Replace("{fileId}", fileId);
             }
 
-            long approximateFilesize = unenCryptedFile.Length + (parts * 70);
-            long uploadedSoFar = 0;
-
             long partSize = unenCryptedFile.Length / parts;
 
             long totalFilesize = unenCryptedFile.Length;
@@ -509,19 +508,32 @@ namespace SendSafely
             }
             long offset = totalFilesize - longDiff;
 
+            // TODO: PARALLIZE
+            // Make Segements
+            MemoryStream[] partStreams = new MemoryStream[parts];
             using (FileStream readStream = unenCryptedFile.OpenRead())
             {
-                for (int i = 1; i <= parts; i++ )
+                for (int i = 1; i <= parts; i++)
                 {
-                    System.IO.FileInfo segment = createSegment(readStream, (partSize + offset));
-                    encryptAndUploadSegment(p, packageInfo, i, segment, fileId, passPhrase, uploadedSoFar, approximateFilesize, progress, uploadType);
-                    uploadedSoFar += segment.Length;
-                    segment.Delete();
-
-                    // Offset is only for the first package.
-                    offset = 0;
+                    int partStreamIndex = i - 1;
+                    partStreams[partStreamIndex] = new MemoryStream((int)SEGMENT_SIZE);
+                    createSegment(partStreams[partStreamIndex], readStream, (partSize + offset));
                 }
             }
+
+            // Send Segments
+            int uploadedParts = 0;
+            Parallel.For(1, parts + 1, (i) =>
+            {
+                int partStreamIndex = i - 1;
+                encryptAndUploadSegment(p, packageInfo, i, partStreams[partStreamIndex], fileId, passPhrase,  uploadType);
+                uploadedParts += 1;
+                partStreams[partStreamIndex].Dispose();
+                lock (_progressLock)
+                {
+                    progress.UpdateProgress($"Uploading", uploadedParts / (double)parts * 100d);
+                }
+            });
             
             File file = new File();
             file.FileId = fileId;
@@ -1636,6 +1648,20 @@ namespace SendSafely
             
             return segment;
         }
+        
+        private void createSegment(Stream outputStream, Stream inputStream, long bytesToRead) 
+        {
+            long readBytes = 0;
+            byte[] buf = new byte[1 << 16];
+            int len;
+            int bufferBytesToRead = Math.Min(buf.Length, (int)(bytesToRead));
+            while ((len = inputStream.Read(buf, 0, bufferBytesToRead)) > 0)
+            {
+                outputStream.Write(buf, 0, len);
+                readBytes += len;
+                bufferBytesToRead = Math.Min((int)(bytesToRead - readBytes), buf.Length);
+            }
+        }
 
         private String createFileId(PackageInformation packageInfo, String filename, long filesize, int parts, String uploadType)
         {
@@ -1682,15 +1708,21 @@ namespace SendSafely
             return parts;
         }
 
-        private void encryptAndUploadSegment(Endpoint p, PackageInformation packageInfo, int partIndex, System.IO.FileInfo unencryptedSegment, String filename, char[] passPhrase, long uploadedSoFar, long filesize, ISendSafelyProgress progress, String uploadType)
+        private void encryptAndUploadSegment(Endpoint p, PackageInformation packageInfo, int partIndex, MemoryStream unencryptedSegment, String filename, char[] passPhrase, String uploadType)
         {
             // Create a temp file to store the encrypted data in.
-            System.IO.FileInfo encryptedData = new System.IO.FileInfo(Path.GetTempFileName());
+            MemoryStream encryptedData = new MemoryStream((int)unencryptedSegment.Length);
             
-            CryptUtility.EncryptFile(encryptedData, unencryptedSegment, filename, passPhrase, progress);
-
-            FileUploader fu = new FileUploader(connection, p, progress);
-            //Logger.Log("File length: " + encryptedData.Length);
+            // Reset position of incoming data because it was previously written too
+            unencryptedSegment.Seek(0, SeekOrigin.Begin);
+            
+            CryptUtility.EncryptFile(encryptedData, unencryptedSegment, filename, passPhrase);
+            
+            // Reset the position of the memory stream
+            encryptedData.Seek(0, SeekOrigin.Begin);
+            
+            FileUploader fu = new FileUploader(connection, p, null);
+            
 
             connection.AddKeycode(packageInfo.PackageId, packageInfo.KeyCode);
 
@@ -1699,8 +1731,8 @@ namespace SendSafely
             requestData.FilePart = partIndex;
 
             //StandardResponse response = fu.upload(encryptedData, filename, signature, encryptedData.Length, uploadType);
-            StandardResponse response = fu.Upload(encryptedData, requestData, unencryptedSegment.Name, uploadedSoFar, filesize);
-            encryptedData.Delete();
+            // TODO not sure on file name here
+            StandardResponse response = fu.Upload(encryptedData, requestData, filename);
         }
 
         private String CreateEncryptionKey(String serverSecret, String keyCode)

@@ -38,7 +38,7 @@ namespace SendSafely.Utilities
             this.downloadAPI = downloadAPI;
             this.directoryInfo = directory;
         }
-        private Object _progressLock = new Object();
+        private Object _progressLock = new ();
         public FileInfo downloadFile(String fileId)
         {
             File fileToDownload = findFile(fileId);
@@ -52,11 +52,11 @@ namespace SendSafely.Utilities
             int partCount = fileToDownload.Parts;
             int finished = 0;
             MemoryStream[] partStreams = new MemoryStream[partCount];
-            Parallel.For(1, partCount + 1, (i, state) =>
+            Parallel.For(1, partCount + 1, (i) =>
             {
                 // Exact segment size
                 int partStreamIndex = i - 1;
-                partStreams[partStreamIndex] = new MemoryStream(2621440);
+                partStreams[partStreamIndex] = new MemoryStream((int)PackageUtility.SEGMENT_SIZE);
                 DownloadSegment(partStreams[partStreamIndex], p, i, cachedChecksum);
                 finished += 1;
                 lock(_progressLock)
@@ -73,6 +73,7 @@ namespace SendSafely.Utilities
                 {
                     s.Seek(0, SeekOrigin.Begin);
                     CryptUtility.DecryptFile(decryptedFileStream, s, cachedDecryptionKey);
+                    s.Dispose();
                 }
             }
             return newFile;

@@ -33,20 +33,24 @@ namespace SendSafely.Utilities
             return EncodingUtil.Base64Encode(randomBytes);
         }
 
-        public static void EncryptFile(FileInfo encryptedFile, FileInfo inputFile, String filename, char[] passPhrase, ISendSafelyProgress progress)
+        public static void EncryptFile(MemoryStream encryptedStream, MemoryStream inputStream, String filename, char[] passPhrase)
         {
-            using (FileStream outStream = encryptedFile.OpenWrite())
+            PgpEncryptedDataGenerator cPk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true);
+            cPk.AddMethod(passPhrase);
+            
+            using Stream cOut = cPk.Open(encryptedStream, new byte[1 << 16]);
+            PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
+            
+            using Stream lOut = lData.Open(cOut, PgpLiteralData.Binary, filename, inputStream.Length, DateTime.Now);
+            byte[] buf = new byte[1 << 16];
+            int len;
+            while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
             {
-                PgpEncryptedDataGenerator cPk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true);
-                cPk.AddMethod(passPhrase);
-                using (Stream cOut = cPk.Open(outStream, new byte[1 << 16]))
-                {
-                    WriteFileToLiteralData(cOut, PgpLiteralData.Binary, inputFile, filename, inputFile.Length);
-                }
+                lOut.Write(buf, 0, len);
             }
         }
 
-        public static void DecryptFile(Stream outStream, Stream inputStream, char[] passPhrase)
+        public static void DecryptFile(FileStream outStream, Stream inputStream, char[] passPhrase)
         {
             inputStream = PgpUtilities.GetDecoderStream(inputStream);
 
@@ -437,24 +441,21 @@ namespace SendSafely.Utilities
             return pgpSecKey.ExtractPrivateKey(null);
         }
 
-        private static void WriteFileToLiteralData(Stream pOut, char format, FileInfo dataToRead, String filename, long fileSize)
+        private static void WriteFileToLiteralData(Stream pOut, char format, MemoryStream inputStream, String filename, long fileSize)
         {
             //PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
 		    //OutputStream pOut = lData.open(out, fileType, filename, filesize, new Date());
             PgpLiteralDataGenerator lData = new PgpLiteralDataGenerator();
 		    //lData.Open(pOut, format, dataToRead);
 
+            
             using (Stream lOut = lData.Open(pOut, format, filename, fileSize, DateTime.Now))
             {
-                using (Stream inputStream = dataToRead.OpenRead())
+                byte[] buf = new byte[1 << 16];
+                int len;
+                while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
                 {
-
-                    byte[] buf = new byte[1 << 16];
-                    int len;
-                    while ((len = inputStream.Read(buf, 0, buf.Length)) > 0)
-                    {
-                        lOut.Write(buf, 0, len);
-                    }
+                    lOut.Write(buf, 0, len);
                 }
             }
 		}

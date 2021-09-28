@@ -31,23 +31,17 @@ namespace SendSafely.Utilities
             this.connection = connection;
             this.boundary = DateTime.Now.Ticks.ToString();
         }
-
-        //public StandardResponse upload(FileInfo rawFile, String filename, String signature, long fileSize, String uploadType)
-        public StandardResponse Upload(FileInfo rawFile, UploadFileRequest requestData, String filename, long uploadedSoFar, long fullFillSize)
+        
+        
+        public StandardResponse Upload(MemoryStream uploadData, UploadFileRequest requestData, String filename)
         {
-            using (FileStream fileStream = rawFile.OpenRead())
-            {
-                using (ProgressStream progressStream = new ProgressStream(fileStream, progress, "Uploading", fullFillSize, 0))
-                {
-                    long uploadedBytes = UploadSegment(progressStream, requestData, filename, rawFile.Length);
-                }
-            }
+            UploadSegment(uploadData, requestData, filename, uploadData.Length);
             return response;
         }
 
         #region Private Functions
 
-        private long UploadSegment(ProgressStream fileStream, UploadFileRequest requestData, String filename, long segmentSize)
+        private long UploadSegment(MemoryStream inputStream, UploadFileRequest requestData, String filename, long segmentSize)
         {
             Logger.Log("Uploading file with size: " + segmentSize);
             long uploadedBytes = 0;
@@ -80,7 +74,7 @@ namespace SendSafely.Utilities
                     {
                         Write(content, dataStream);
 
-                        uploadedBytes = SendBinary(fileStream, filename, dataStream, boundary);
+                        uploadedBytes = SendBinary(inputStream, filename, dataStream, boundary);
 
                         Write(suffix, dataStream);
                         dataStream.Flush();
@@ -153,7 +147,7 @@ namespace SendSafely.Utilities
             return response;
         }
 
-        private long SendBinary(ProgressStream input, String filename, Stream output, String boundary)
+        private long SendBinary(MemoryStream input, String filename, Stream output, String boundary)
         {
             Write(GetFileSegmentStart(filename), output);
             output.Flush();
