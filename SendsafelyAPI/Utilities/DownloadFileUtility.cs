@@ -91,25 +91,24 @@ namespace SendSafely.Utilities
 
         private void DownloadSegment(Stream progressStream, Endpoint p, int part, string cachedChecksum = null)
         {
-            DownloadFileRequest request = new DownloadFileRequest();
-            request.Api = this.downloadAPI;
-            request.Checksum = cachedChecksum ?? createChecksum();
-            request.Part = part;
+            DownloadFileRequest request = new DownloadFileRequest
+            {
+                Api = this.downloadAPI,
+                Checksum = cachedChecksum ?? createChecksum(),
+                Part = part
+            };
+            
             if (this.password != null) {
                 request.Password = this.password;
             }
 
             using (Stream objStream = connection.CallServer(p, request))
             {
-                using (StreamReader objReader = new StreamReader(objStream))
+                byte[] tmp = new byte[BufferSize];
+                int l;
+                while ((l = objStream.Read(tmp, 0, BufferSize)) != 0)
                 {
-                    byte[] tmp = new byte[BufferSize];
-                    int l;
-
-                    while ((l = objStream.Read(tmp, 0, BufferSize)) != 0)
-                    {
-                        progressStream.Write(tmp, 0, l);
-                    }
+                    progressStream.Write(tmp, 0, l);
                 }
             }
         }
