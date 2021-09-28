@@ -255,8 +255,7 @@ namespace SendSafely.Objects
         {
             String content = apiKey + uri.Split('?')[0] + dateStr + requestData;
             Logger.Log("-" + content + "-");
-            CryptUtility cu = new CryptUtility();
-            return cu.createSignature(privateKey, content);
+            return CryptUtility.createSignature(privateKey, content);
         }
 
         private String ConvertToJSON(Object obj)

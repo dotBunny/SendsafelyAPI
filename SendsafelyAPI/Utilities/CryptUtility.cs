@@ -22,9 +22,9 @@ using Org.BouncyCastle.X509;
 
 namespace SendSafely.Utilities
 {
-    public class CryptUtility
+    public static class CryptUtility
     {
-        public String GenerateToken()
+        public static String GenerateToken()
         {
             byte[] randomBytes = new byte[32];
             RNGCryptoServiceProvider prng = new RNGCryptoServiceProvider();
@@ -33,7 +33,7 @@ namespace SendSafely.Utilities
             return EncodingUtil.Base64Encode(randomBytes);
         }
 
-        public void EncryptFile(FileInfo encryptedFile, FileInfo inputFile, String filename, char[] passPhrase, ISendSafelyProgress progress)
+        public static void EncryptFile(FileInfo encryptedFile, FileInfo inputFile, String filename, char[] passPhrase, ISendSafelyProgress progress)
         {
             using (FileStream outStream = encryptedFile.OpenWrite())
             {
@@ -46,7 +46,7 @@ namespace SendSafely.Utilities
             }
         }
 
-        public void DecryptFile(Stream outStream, Stream inputStream, char[] passPhrase)
+        public static void DecryptFile(Stream outStream, Stream inputStream, char[] passPhrase)
         {
             inputStream = PgpUtilities.GetDecoderStream(inputStream);
 
@@ -93,7 +93,7 @@ namespace SendSafely.Utilities
             }
         }
 
-        public String DecryptMessage(String encryptedMessage, char[] passPhrase)
+        public static String DecryptMessage(String encryptedMessage, char[] passPhrase)
         {
             // Remove the Base64 encoding
             byte[] rawMessage = Convert.FromBase64String(encryptedMessage);
@@ -146,7 +146,7 @@ namespace SendSafely.Utilities
             return message;
         }
 
-        public String EncryptMessage(String unencryptedMessage, char[] passPhrase)
+        public static String EncryptMessage(String unencryptedMessage, char[] passPhrase)
         {
             // Convert the input to a byte array. We expect the string to be UTF-8 encoded
             byte[] unencryptedByteArray = System.Text.Encoding.UTF8.GetBytes (unencryptedMessage);
@@ -181,7 +181,7 @@ namespace SendSafely.Utilities
             return Convert.ToBase64String(encOut.ToArray());
         }
 
-        public String EncryptKeycode(String publicKeyStr, String unencryptedKeycode)
+        public static String EncryptKeycode(String publicKeyStr, String unencryptedKeycode)
         {
             byte[] unencryptedByteArray = System.Text.Encoding.ASCII.GetBytes (unencryptedKeycode);
             byte[] decodedPublicKey = System.Text.Encoding.ASCII.GetBytes(publicKeyStr);
@@ -238,7 +238,7 @@ namespace SendSafely.Utilities
             return System.Text.Encoding.Default.GetString(encOut.ToArray());
         }
 
-        public String DecryptKeycode(String privateKeyStr, String encryptedKeycode)
+        public static String DecryptKeycode(String privateKeyStr, String encryptedKeycode)
         {
             byte[] rawMessage = System.Text.Encoding.ASCII.GetBytes(encryptedKeycode);
 
@@ -297,7 +297,7 @@ namespace SendSafely.Utilities
             return keycode;
         }
 
-        public Keypair GenerateKeyPair(String email)
+        public static Keypair GenerateKeyPair(String email)
         {
             RsaKeyPairGenerator kpgen = new RsaKeyPairGenerator();
             kpgen.Init(new KeyGenerationParameters(new SecureRandom(new CryptoApiRandomGenerator()), 2048));
@@ -308,7 +308,7 @@ namespace SendSafely.Utilities
             return pair;
         }
 
-        private Keypair Armor(AsymmetricCipherKeyPair keyPair, String email)
+        private static Keypair Armor(AsymmetricCipherKeyPair keyPair, String email)
         {
             AsymmetricKeyParameter privateKey = keyPair.Private;
             AsymmetricKeyParameter publicKey = keyPair.Public;
@@ -352,7 +352,7 @@ namespace SendSafely.Utilities
             return pair;
         }
 
-        public String pbkdf2(String value, String salt, int iterations)
+        public static String pbkdf2(String value, String salt, int iterations)
         {
             String hash = EncodingUtil.HexEncode(PBKDF2Sha256GetBytes(
                 32, 
@@ -363,7 +363,7 @@ namespace SendSafely.Utilities
             return hash;
         }
 
-        public String createSignature(String key, String data)
+        public static String createSignature(String key, String data)
         {
             byte[] keyBytes = System.Text.Encoding.UTF8.GetBytes(key);
             byte[] hashValue;
@@ -374,7 +374,7 @@ namespace SendSafely.Utilities
             return EncodingUtil.HexEncode(hashValue);
         }
 
-        private byte[] PBKDF2Sha256GetBytes(int dklen, byte[] password, byte[] salt, int iterationCount)
+        private static byte[] PBKDF2Sha256GetBytes(int dklen, byte[] password, byte[] salt, int iterationCount)
         {
             using (var hmac = new System.Security.Cryptography.HMACSHA256(password))
             {
@@ -425,7 +425,7 @@ namespace SendSafely.Utilities
             }
         }
 
-        private PgpPrivateKey FindKeyById(PgpSecretKeyRingBundle privRings, long keyId)
+        private static PgpPrivateKey FindKeyById(PgpSecretKeyRingBundle privRings, long keyId)
         {
             PgpSecretKey pgpSecKey = privRings.GetSecretKey(keyId);
 
@@ -437,7 +437,7 @@ namespace SendSafely.Utilities
             return pgpSecKey.ExtractPrivateKey(null);
         }
 
-        private void WriteFileToLiteralData(Stream pOut, char format, FileInfo dataToRead, String filename, long fileSize)
+        private static void WriteFileToLiteralData(Stream pOut, char format, FileInfo dataToRead, String filename, long fileSize)
         {
             //PGPLiteralDataGenerator lData = new PGPLiteralDataGenerator();
 		    //OutputStream pOut = lData.open(out, fileType, filename, filesize, new Date());

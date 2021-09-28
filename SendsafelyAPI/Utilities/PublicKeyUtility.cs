@@ -25,8 +25,7 @@ namespace SendSafely
 
         public PrivateKey GenerateKeyPair(String description)
         {
-            CryptUtility cu = new CryptUtility();
-            Keypair keyPair = cu.GenerateKeyPair(KEY_EMAIL);
+            Keypair keyPair = CryptUtility.GenerateKeyPair(KEY_EMAIL);
 
             String publicKeyId = UploadPublicKey(keyPair.PublicKey, description);
 
@@ -63,12 +62,7 @@ namespace SendSafely
             {
                 throw new GettingKeycodeFailedException("Failed to get keycode: " + response.Message);
             }
-
-            String encryptedKeycode = response.Message;
-
-            CryptUtility cu = new CryptUtility();
-            String keycode = cu.DecryptKeycode(privateKeyStr, encryptedKeycode);
-            return keycode;
+            return CryptUtility.DecryptKeycode(privateKeyStr, response.Message);
         }
 
         private String UploadPublicKey(String publicKey, String description)

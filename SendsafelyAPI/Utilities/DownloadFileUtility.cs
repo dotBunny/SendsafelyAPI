@@ -44,8 +44,7 @@ namespace SendSafely.Utilities
 
             Endpoint p = createEndpoint(pkgInfo, fileId);
             
-            CryptUtility cu = new CryptUtility();
-            string cachedChecksum = cu.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
+            string cachedChecksum = CryptUtility.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
             
             using (FileStream decryptedFileStream = newFile.OpenWrite())
             {
@@ -87,8 +86,7 @@ namespace SendSafely.Utilities
 
         private void DecryptFile(Stream encryptedFile, Stream decryptedFile)
         {
-            CryptUtility cu = new CryptUtility();
-            cu.DecryptFile(decryptedFile, encryptedFile, getDecryptionKey());
+            CryptUtility.DecryptFile(decryptedFile, encryptedFile, getDecryptionKey());
         }
 
         private void DownloadSegment(Stream progressStream, Endpoint p, int part, string cachedChecksum = null)
@@ -124,8 +122,7 @@ namespace SendSafely.Utilities
 
         private String createChecksum()
         {
-            CryptUtility cu = new CryptUtility();
-            return cu.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
+            return CryptUtility.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
         }
 
         private File findFile(String fileId)

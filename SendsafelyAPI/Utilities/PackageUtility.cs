@@ -55,11 +55,10 @@ namespace SendSafely
             }
 
             // Derive keycode
-            CryptUtility cu = new CryptUtility();
 
             PackageInformation packageInfo = new PackageInformation();
             Logger.Log("Adding keycode to package: " + packageInfo.PackageId);
-            packageInfo.KeyCode = cu.GenerateToken();
+            packageInfo.KeyCode = CryptUtility.GenerateToken();
             connection.AddKeycode(response.PackageId, packageInfo.KeyCode);
             packageInfo = this.GetPackageInformation(response.PackageId);
 
@@ -406,9 +405,8 @@ namespace SendSafely
             String keyCode = getKeyCode(secureLink);
 
             VerifyKeycode(keyCode);
-
-            CryptUtility cu = new CryptUtility();
-            String checksum = cu.pbkdf2(keyCode, packageCode, 1024);
+            
+            String checksum = CryptUtility.pbkdf2(keyCode, packageCode, 1024);
 
             // Get the package information from the server so we can get the package ID and server secret.
             PackageInformation packageInfo = this.GetPackageInformation(packageCode);
@@ -433,9 +431,8 @@ namespace SendSafely
             // Finally, decrypt the message
             String key = CreateEncryptionKey(packageInfo.ServerSecret, keyCode);
             char[] passPhrase = key.ToCharArray();
-
-            CryptUtility _cu = new CryptUtility();
-            String message = _cu.DecryptMessage(response.Message, passPhrase);
+            
+            String message = CryptUtility.DecryptMessage(response.Message, passPhrase);
 
             return message;
         }
@@ -564,9 +561,8 @@ namespace SendSafely
             {
                 String key = CreateEncryptionKey(packageInfo.ServerSecret, packageInfo.KeyCode);
                 char[] passPhrase = key.ToCharArray();
-
-                CryptUtility _cu = new CryptUtility();
-                encryptedMessage = _cu.EncryptMessage(message, passPhrase);
+                
+                encryptedMessage = CryptUtility.EncryptMessage(message, passPhrase);
             }
 
             Endpoint p = ConnectionStrings.Endpoints["addMessage"].Clone();
@@ -690,9 +686,8 @@ namespace SendSafely
 
             Endpoint p = ConnectionStrings.Endpoints["finalizePackage"].Clone();
             p.Path = p.Path.Replace("{packageId}", packageInfo.PackageId);
-
-            CryptUtility cu = new CryptUtility();
-            request.Checksum = cu.pbkdf2(packageInfo.KeyCode, packageInfo.PackageCode, 1024);
+            
+            request.Checksum = CryptUtility.pbkdf2(packageInfo.KeyCode, packageInfo.PackageCode, 1024);
             connection.AddKeycode(packageInfo.PackageId, packageInfo.KeyCode);
 
             FinalizePackageResponse response = connection.Send<FinalizePackageResponse>(p, request);
@@ -772,9 +767,7 @@ namespace SendSafely
 
             Endpoint p = ConnectionStrings.Endpoints["finalizePackage"].Clone();
             p.Path = p.Path.Replace("{packageId}", packageInfo.PackageId);
-
-            CryptUtility cu = new CryptUtility();
-            request.Checksum = cu.pbkdf2(packageInfo.KeyCode, packageInfo.PackageCode, 1024);
+            request.Checksum = CryptUtility.pbkdf2(packageInfo.KeyCode, packageInfo.PackageCode, 1024);
             connection.AddKeycode(packageInfo.PackageId, packageInfo.KeyCode);
 
             FinalizePackageResponse response = connection.Send<FinalizePackageResponse>(p, request);
@@ -1425,10 +1418,9 @@ namespace SendSafely
 
         private EncryptedKeycode Create(PublicKeyRaw publicKey, String keycode)
         {
-            CryptUtility cu = new CryptUtility();
             EncryptedKeycode encryptedKeycode = new EncryptedKeycode();
             encryptedKeycode.ID = publicKey.ID;
-            encryptedKeycode.Keycode = cu.EncryptKeycode(publicKey.Key, keycode);
+            encryptedKeycode.Keycode = CryptUtility.EncryptKeycode(publicKey.Key, keycode);
             return encryptedKeycode;
         }
 
@@ -1694,9 +1686,8 @@ namespace SendSafely
         {
             // Create a temp file to store the encrypted data in.
             System.IO.FileInfo encryptedData = new System.IO.FileInfo(Path.GetTempFileName());
-
-            CryptUtility cu = new CryptUtility();
-            cu.EncryptFile(encryptedData, unencryptedSegment, filename, passPhrase, progress);
+            
+            CryptUtility.EncryptFile(encryptedData, unencryptedSegment, filename, passPhrase, progress);
 
             FileUploader fu = new FileUploader(connection, p, progress);
             //Logger.Log("File length: " + encryptedData.Length);
