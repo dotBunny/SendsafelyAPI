@@ -54,8 +54,10 @@ namespace SendSafely.Utilities
             MemoryStream[] partStreams = new MemoryStream[partCount];
             Parallel.For(1, partCount + 1, (i, state) =>
             {
-                partStreams[i - 1] = new MemoryStream(3072000);
-                DownloadSegment(partStreams[i-1], p, i, cachedChecksum);
+                // Exact segment size
+                int partStreamIndex = i - 1;
+                partStreams[partStreamIndex] = new MemoryStream(2621440);
+                DownloadSegment(partStreams[partStreamIndex], p, i, cachedChecksum);
                 finished += 1;
                 lock(_progressLock)
                 {
