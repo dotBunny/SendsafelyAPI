@@ -61,7 +61,7 @@ namespace SendSafely.Utilities
                 finished += 1;
                 lock(_progressLock)
                 {
-                    progress.UpdateProgress($"Downloading", (finished / (double)partCount) * 100d);
+                    progress.UpdateProgress($"Downloading Parts", (finished / (double)partCount) * 100d);
                 }
             });
             

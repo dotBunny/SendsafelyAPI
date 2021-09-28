@@ -530,7 +530,7 @@ namespace SendSafely
                 partStreams[partStreamIndex].Dispose();
                 lock (_progressLock)
                 {
-                    progress.UpdateProgress($"Uploading", uploadedParts / (double)parts * 100d);
+                    progress.UpdateProgress($"Uploaded Parts", uploadedParts / (double)parts * 100d);
                 }
             });
             
