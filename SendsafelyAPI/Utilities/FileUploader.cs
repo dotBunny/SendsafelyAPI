@@ -37,7 +37,7 @@ namespace SendSafely.Utilities
         {
             using (FileStream fileStream = rawFile.OpenRead())
             {
-                using (ProgressStream progressStream = new ProgressStream(fileStream, progress, "Uploading", fullFillSize, uploadedSoFar))
+                using (ProgressStream progressStream = new ProgressStream(fileStream, progress, "Uploading", fullFillSize, 0))
                 {
                     long uploadedBytes = UploadSegment(progressStream, requestData, filename, rawFile.Length);
                 }

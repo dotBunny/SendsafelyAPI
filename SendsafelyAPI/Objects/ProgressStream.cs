@@ -14,23 +14,21 @@ namespace SendSafely.Objects
         ISendSafelyProgress _progress;
         String _prefix;
         long _fileSize;
-        long _offset;
         long _readSoFar;
-        long _lastProgressCallback;
         int UPDATE_FREQUENCY = 250;
         Stopwatch _stopwatch;
+        private double _basePercentage;
 
-        public ProgressStream(Stream inner, ISendSafelyProgress progress, String prefix, long size, long offset)
+        public ProgressStream(Stream inner, ISendSafelyProgress progress, String prefix, long size, double partPercentage)
         {
             this._inner = inner;
             this._progress = progress;
             this._prefix = prefix;
             this._fileSize = size < 1024 ? size * 1024 : size; // multiple file size by 1024 if fileSize is less than 1024 bytes.
             this._readSoFar = 0;
-            this._offset = offset;
-            _lastProgressCallback = DateTime.Now.Ticks - UPDATE_FREQUENCY; // Make sure we trigger it the first time.
             _stopwatch = new Stopwatch();
             _stopwatch.Start();
+            _basePercentage = partPercentage;
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -105,8 +103,7 @@ namespace SendSafely.Objects
             {
                 _stopwatch.Reset();
                 _stopwatch.Start();
-
-                _progress.UpdateProgress(_prefix, ((double)(_readSoFar+_offset) / (double)_fileSize) * 100);
+                _progress.UpdateProgress(_prefix, (_fileSize * _basePercentage + _readSoFar) / _fileSize * 100d);
             }
         }
     }

@@ -49,13 +49,14 @@ namespace SendSafely.Utilities
             
             using (FileStream decryptedFileStream = newFile.OpenWrite())
             {
-                for (int i = 1; i <= fileToDownload.Parts; i++)
+                int partCount = fileToDownload.Parts;
+                for (int i = 1; i <= partCount; i++)
                 {
                     // Reserve in ~3mb blocks
                     using (MemoryStream memoryStream = new MemoryStream(3072000))
                     {
                         using (ProgressStream progressStream = new ProgressStream(memoryStream, progress, "Downloading",
-                            fileToDownload.FileSize, 0))
+                            fileToDownload.FileSize, (double)(i-1) / partCount))
                         {
                             DownloadSegment(progressStream, p, i, cachedChecksum);
                         }
