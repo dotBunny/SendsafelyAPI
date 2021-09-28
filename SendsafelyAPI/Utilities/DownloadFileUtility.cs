@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text;
 using SendSafely.Exceptions;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using SendSafely.Objects;
 
@@ -37,7 +38,7 @@ namespace SendSafely.Utilities
             this.downloadAPI = downloadAPI;
             this.directoryInfo = directory;
         }
-
+        private Object _progressLock = new Object();
         public FileInfo downloadFile(String fileId)
         {
             File fileToDownload = findFile(fileId);
@@ -56,7 +57,10 @@ namespace SendSafely.Utilities
                 partStreams[i - 1] = new MemoryStream(3072000);
                 DownloadSegment(partStreams[i-1], p, i, cachedChecksum);
                 finished += 1;
-                Console.WriteLine($"Downloaded Part {i} - {finished}/{partCount}.");
+                lock(_progressLock)
+                {
+                    progress.UpdateProgress($"Downloading", (finished / (double)partCount) * 100d);
+                }
             });
             
             // Decrypt parts back into main file
