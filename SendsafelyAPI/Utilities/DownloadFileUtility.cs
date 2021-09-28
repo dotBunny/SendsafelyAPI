@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using SendSafely.Exceptions;
 using System.IO;
+using System.Threading.Tasks;
 using SendSafely.Objects;
 
 namespace SendSafely.Utilities
@@ -41,32 +43,32 @@ namespace SendSafely.Utilities
             File fileToDownload = findFile(fileId);
 
             FileInfo newFile = createTempFile(fileToDownload);
-
+            
             Endpoint p = createEndpoint(pkgInfo, fileId);
             
             string cachedChecksum = CryptUtility.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
-            char[] cachedDecryptionKey = (pkgInfo.ServerSecret + pkgInfo.KeyCode).ToCharArray();
             
+            int partCount = fileToDownload.Parts;
+            int finished = 0;
+            MemoryStream[] partStreams = new MemoryStream[partCount];
+            Parallel.For(1, partCount + 1, (i, state) =>
+            {
+                partStreams[i - 1] = new MemoryStream(3072000);
+                DownloadSegment(partStreams[i-1], p, i, cachedChecksum);
+                finished += 1;
+                Console.WriteLine($"Downloaded Part {i} - {finished}/{partCount}.");
+            });
+            
+            // Decrypt parts back into main file
+            char[] cachedDecryptionKey = (pkgInfo.ServerSecret + pkgInfo.KeyCode).ToCharArray();
             using (FileStream decryptedFileStream = newFile.OpenWrite())
             {
-                int partCount = fileToDownload.Parts;
-                for (int i = 1; i <= partCount; i++)
+                foreach (var s in partStreams)
                 {
-                    // Reserve in ~3mb blocks
-                    using (MemoryStream memoryStream = new MemoryStream(3072000))
-                    {
-                        using (ProgressStream progressStream = new ProgressStream(memoryStream, progress, "Downloading",
-                            fileToDownload.FileSize, (double)(i-1) / partCount))
-                        {
-                            DownloadSegment(progressStream, p, i, cachedChecksum);
-                        }
-
-                        memoryStream.Seek(0, SeekOrigin.Begin);
-                        CryptUtility.DecryptFile(decryptedFileStream, memoryStream, cachedDecryptionKey);
-                    }
+                    s.Seek(0, SeekOrigin.Begin);
+                    CryptUtility.DecryptFile(decryptedFileStream, s, cachedDecryptionKey);
                 }
             }
-
             return newFile;
         }
 
