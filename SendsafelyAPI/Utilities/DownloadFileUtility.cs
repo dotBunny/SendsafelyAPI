@@ -57,7 +57,7 @@ namespace SendSafely.Utilities
                         DownloadSegment(progressStream, p, i, cachedChecksum);
                     }
                     memoryStream.Seek(0, SeekOrigin.Begin);
-                    DecryptFile(memoryStream, decryptedFileStream);
+                    CryptUtility.DecryptFile(decryptedFileStream, memoryStream, getDecryptionKey());
                     memoryStream.Close();
                 }
             }
@@ -83,11 +83,7 @@ namespace SendSafely.Utilities
 
             return p;
         }
-
-        private void DecryptFile(Stream encryptedFile, Stream decryptedFile)
-        {
-            CryptUtility.DecryptFile(decryptedFile, encryptedFile, getDecryptionKey());
-        }
+        
 
         private void DownloadSegment(Stream progressStream, Endpoint p, int part, string cachedChecksum = null)
         {
