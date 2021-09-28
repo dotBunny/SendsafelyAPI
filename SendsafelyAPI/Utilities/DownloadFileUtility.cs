@@ -52,14 +52,17 @@ namespace SendSafely.Utilities
                 for (int i = 1; i <= fileToDownload.Parts; i++)
                 {
                     // Reserve in ~3mb blocks
-                    MemoryStream memoryStream = new MemoryStream(3072000);
-                    using (ProgressStream progressStream = new ProgressStream(memoryStream, progress, "Downloading", fileToDownload.FileSize, 0))
+                    using (MemoryStream memoryStream = new MemoryStream(3072000))
                     {
-                        DownloadSegment(progressStream, p, i, cachedChecksum);
+                        using (ProgressStream progressStream = new ProgressStream(memoryStream, progress, "Downloading",
+                            fileToDownload.FileSize, 0))
+                        {
+                            DownloadSegment(progressStream, p, i, cachedChecksum);
+                        }
+
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        CryptUtility.DecryptFile(decryptedFileStream, memoryStream, cachedDecryptionKey);
                     }
-                    memoryStream.Seek(0, SeekOrigin.Begin);
-                    CryptUtility.DecryptFile(decryptedFileStream, memoryStream, cachedDecryptionKey);
-                    memoryStream.Close();
                 }
             }
 
