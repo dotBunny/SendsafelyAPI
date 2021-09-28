@@ -507,9 +507,8 @@ namespace SendSafely
                 longDiff += partSize;
             }
             long offset = totalFilesize - longDiff;
-
-            // TODO: PARALLIZE
-            // Make Segements
+            
+            // Make Segments
             MemoryStream[] partStreams = new MemoryStream[parts];
             using (FileStream readStream = unenCryptedFile.OpenRead())
             {
