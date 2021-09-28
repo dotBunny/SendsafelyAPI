@@ -74,6 +74,10 @@ namespace SendSafely.Objects
         {
             if (keycodes.ContainsKey(packageId))
             {
+                if (keycodes[packageId] == keycode)
+                {
+                    return;
+                }
                 keycodes.Remove(packageId);
             }
             keycodes.Add(packageId, keycode);
