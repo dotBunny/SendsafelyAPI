@@ -45,6 +45,7 @@ namespace SendSafely.Utilities
             Endpoint p = createEndpoint(pkgInfo, fileId);
             
             string cachedChecksum = CryptUtility.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
+            char[] cachedDecryptionKey = (pkgInfo.ServerSecret + pkgInfo.KeyCode).ToCharArray();
             
             using (FileStream decryptedFileStream = newFile.OpenWrite())
             {
@@ -57,7 +58,7 @@ namespace SendSafely.Utilities
                         DownloadSegment(progressStream, p, i, cachedChecksum);
                     }
                     memoryStream.Seek(0, SeekOrigin.Begin);
-                    CryptUtility.DecryptFile(decryptedFileStream, memoryStream, getDecryptionKey());
+                    CryptUtility.DecryptFile(decryptedFileStream, memoryStream, cachedDecryptionKey);
                     memoryStream.Close();
                 }
             }
@@ -85,12 +86,12 @@ namespace SendSafely.Utilities
         }
         
 
-        private void DownloadSegment(Stream progressStream, Endpoint p, int part, string cachedChecksum = null)
+        private void DownloadSegment(Stream progressStream, Endpoint p, int part, string cachedChecksum)
         {
             DownloadFileRequest request = new DownloadFileRequest
             {
                 Api = this.downloadAPI,
-                Checksum = cachedChecksum ?? createChecksum(),
+                Checksum = cachedChecksum,
                 Part = part
             };
             
@@ -107,17 +108,6 @@ namespace SendSafely.Utilities
                     progressStream.Write(tmp, 0, l);
                 }
             }
-        }
-
-        private char[] getDecryptionKey()
-        {
-            String keyString = pkgInfo.ServerSecret + pkgInfo.KeyCode;
-            return keyString.ToCharArray();
-        }
-
-        private String createChecksum()
-        {
-            return CryptUtility.pbkdf2(pkgInfo.KeyCode, pkgInfo.PackageCode, 1024);
         }
 
         private File findFile(String fileId)
@@ -147,12 +137,7 @@ namespace SendSafely.Utilities
 	    {
             return createTempFile(Guid.NewGuid().ToString());
 	    }
-
-        private FileInfo createTempFile()
-        {
-            return createTempFile(Guid.NewGuid().ToString());
-        }
-
+        
         private FileInfo createTempFile(String fileName)
         {
             return new FileInfo(System.IO.Path.GetTempPath() + fileName);
