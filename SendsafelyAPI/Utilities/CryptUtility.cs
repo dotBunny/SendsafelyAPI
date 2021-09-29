@@ -33,7 +33,7 @@ namespace SendSafely.Utilities
             return EncodingUtil.Base64Encode(randomBytes);
         }
 
-        public static void EncryptFile(MemoryStream encryptedStream, MemoryStream inputStream, String filename, char[] passPhrase)
+        public static void EncryptStream(MemoryStream encryptedStream, MemoryStream inputStream, String filename, char[] passPhrase)
         {
             PgpEncryptedDataGenerator cPk = new PgpEncryptedDataGenerator(SymmetricKeyAlgorithmTag.Aes256, true);
             cPk.AddMethod(passPhrase);
@@ -50,7 +50,7 @@ namespace SendSafely.Utilities
             }
         }
 
-        public static void DecryptFile(FileStream outStream, Stream inputStream, char[] passPhrase)
+        public static void DecryptStream(Stream outStream, Stream inputStream, char[] passPhrase)
         {
             inputStream = PgpUtilities.GetDecoderStream(inputStream);
 

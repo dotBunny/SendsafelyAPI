@@ -616,6 +616,32 @@ namespace SendSafely
 
             return downloadUtility.downloadFile(fileId);
         }
+        
+        public CoalesceStream DownloadFileStream(String packageId, String directoryId, String fileId, String keycode, ISendSafelyProgress progress, String downloadAPI, String password)
+        {
+            if (packageId == null)
+            {
+                throw new InvalidPackageException("Package ID can not be null");
+            }
+
+            connection.AddKeycode(packageId, keycode);
+
+            // Get the updated package information.
+            PackageInformation packageInfo = GetPackageInformation(packageId);
+            packageInfo.KeyCode = keycode;
+
+            DownloadFileUtility downloadUtility;
+            if (directoryId != null) //Workspace package
+            {
+                downloadUtility = new DownloadFileUtility(connection, GetDirectory(packageId, directoryId), packageInfo, progress, downloadAPI);
+            }
+            else //Classic package
+            {
+                downloadUtility = new DownloadFileUtility(connection, packageInfo, progress, downloadAPI, password);
+            }
+
+            return downloadUtility.downloadFileStream(fileId);
+        }
 
         public String FinalizePackage(String packageId, String keycode)
         {
@@ -1715,7 +1741,7 @@ namespace SendSafely
             // Reset position of incoming data because it was previously written too
             unencryptedSegment.Seek(0, SeekOrigin.Begin);
             
-            CryptUtility.EncryptFile(encryptedData, unencryptedSegment, filename, passPhrase);
+            CryptUtility.EncryptStream(encryptedData, unencryptedSegment, filename, passPhrase);
             
             // Reset the position of the memory stream
             encryptedData.Seek(0, SeekOrigin.Begin);

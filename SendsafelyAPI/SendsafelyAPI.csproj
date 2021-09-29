@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="APIKey.cs" />
     <Compile Include="ClientAPI.cs" />
+    <Compile Include="CoalesceStream.cs" />
     <Compile Include="Confirmation.cs" />
     <Compile Include="CountryCodes.cs" />
     <Compile Include="Directory.cs" />

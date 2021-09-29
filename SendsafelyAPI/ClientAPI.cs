@@ -369,6 +369,10 @@ namespace SendSafely
         {
             return DownloadFile(packageId, fileId, keyCode, progress, "CSHARP");
         }
+        public CoalesceStream DownloadFileStream(String packageId, String fileId, String keyCode, ISendSafelyProgress progress)
+        {
+            return DownloadFileStream(packageId, fileId, keyCode, progress, "CSHARP");
+        }
 
         /// <summary>
         /// Downloads a file from the server and decrypts it.
@@ -391,6 +395,10 @@ namespace SendSafely
         public FileInfo DownloadFile(String packageId, String fileId, String keyCode, ISendSafelyProgress progress, String downloadAPI)
         {
             return DownloadFile(packageId, fileId, keyCode, progress, downloadAPI, null);
+        }
+        public CoalesceStream DownloadFileStream(String packageId, String fileId, String keyCode, ISendSafelyProgress progress, String downloadAPI)
+        {
+            return DownloadFileStream(packageId, fileId, keyCode, progress, downloadAPI, null);
         }
 
         /// <summary>
@@ -419,6 +427,13 @@ namespace SendSafely
             PackageUtility pu = new PackageUtility(connection);
             return pu.DownloadFile(packageId, null, fileId, keyCode, progress, downloadAPI, password);
         }
+        public CoalesceStream DownloadFileStream(String packageId, String fileId, String keyCode, ISendSafelyProgress progress, String downloadAPI, String password)
+        {
+            EnforceInitialized();
+
+            PackageUtility pu = new PackageUtility(connection);
+            return pu.DownloadFileStream(packageId, null, fileId, keyCode, progress, downloadAPI, password);
+        }
 
         /// <summary>
         /// Downloads a file from the server and decrypts it.
@@ -431,6 +446,10 @@ namespace SendSafely
         public FileInfo DownloadFile(String packageId, String fileId, String keyCode, String password)
         {
             return DownloadFile(packageId, fileId, keyCode, null, "CSHARP", password);
+        }
+        public CoalesceStream DownloadFileStream(String packageId, String fileId, String keyCode, String password)
+        {
+            return DownloadFileStream(packageId, fileId, keyCode, null, "CSHARP", password);
         }
 
         /// <summary>
@@ -446,6 +465,10 @@ namespace SendSafely
         {
             return DownloadFile(packageId, fileId, keyCode, progress, "CSHARP", password);
         }
+        public CoalesceStream DownloadFileStream(String packageId, String fileId, String keyCode, String password, ISendSafelyProgress progress)
+        {
+            return DownloadFileStream(packageId, fileId, keyCode, progress, "CSHARP", password);
+        }
 
         /// <summary>
         /// Downloads a file located in a directory of a Workspace package from the server and decrypts it.
@@ -459,6 +482,10 @@ namespace SendSafely
         public FileInfo DownloadFileFromDirectory(String packageId, String directoryId, String fileId, String keyCode, ISendSafelyProgress progress)
         {
             return DownloadFileFromDirectory(packageId, directoryId, fileId, keyCode, progress, "CSHARP");
+        }
+        public CoalesceStream DownloadFileStreamFromDirectory(String packageId, String directoryId, String fileId, String keyCode, ISendSafelyProgress progress)
+        {
+            return DownloadFileStreamFromDirectory(packageId, directoryId, fileId, keyCode, progress, "CSHARP");
         }
 
         /// <summary>
@@ -477,6 +504,13 @@ namespace SendSafely
 
             PackageUtility pu = new PackageUtility(connection);
             return pu.DownloadFile(packageId, directoryId, fileId, keyCode, progress, api, null);
+        }
+        public CoalesceStream DownloadFileStreamFromDirectory(String packageId, String directoryId, String fileId, String keyCode, ISendSafelyProgress progress, String api)
+        {
+            EnforceInitialized();
+
+            PackageUtility pu = new PackageUtility(connection);
+            return pu.DownloadFileStream(packageId, directoryId, fileId, keyCode, progress, api, null);
         }
 
         /// <summary>
