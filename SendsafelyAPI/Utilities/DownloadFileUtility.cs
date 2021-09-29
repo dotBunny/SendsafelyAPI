@@ -82,7 +82,7 @@ namespace SendSafely.Utilities
                 lock(_progressLock)
                 {
                     decryptedFiles += 1;
-                    progress.UpdateProgress($"Decrypting", decryptedFiles/partCount * 100d);
+                    progress.UpdateProgress($"Decrypting", decryptedFiles/(double)partCount * 100d);
                 }
                 partStreams[streamIndex].Dispose();
             });
@@ -96,7 +96,7 @@ namespace SendSafely.Utilities
                 foreach (var s in decryptedStreams)
                 {
                     s.Seek(0, SeekOrigin.Begin);
-                    s.CopyTo(decryptedFileStream);
+                    decryptedFileStream.Write(s.GetBuffer(), 0, (int)s.Length);
                     s.Dispose();
                 }
             }
@@ -135,17 +135,18 @@ namespace SendSafely.Utilities
             char[] cachedDecryptionKey = (pkgInfo.ServerSecret + pkgInfo.KeyCode).ToCharArray();
             int decryptedFiles = 0;
             MemoryStream[] decryptedStreams = new MemoryStream[partCount];
+            long finalFileSize = 0L;
             Parallel.For(1, partCount + 1, (i) =>
             {
                 int streamIndex = i - 1;
                 decryptedStreams[streamIndex] = new MemoryStream((int)PackageUtility.SEGMENT_SIZE);
                 partStreams[streamIndex].Seek(0, SeekOrigin.Begin);
                 CryptUtility.DecryptStream(decryptedStreams[streamIndex], partStreams[streamIndex], cachedDecryptionKey);
-                
+                finalFileSize += decryptedStreams[streamIndex].Length;
                 lock(_progressLock)
                 {
                     decryptedFiles += 1;
-                    progress.UpdateProgress($"Decrypting", decryptedFiles/partCount * 100d);
+                    progress.UpdateProgress($"Decrypting", decryptedFiles/(double)partCount * 100d);
                 }
                 partStreams[i-1].Dispose();
             });
@@ -154,11 +155,12 @@ namespace SendSafely.Utilities
                 progress.UpdateProgress($"Decrypting", 100d);
             }
 
-            CoalesceStream returnStream = new CoalesceStream(fileToDownload.FileSize);
+            CoalesceStream returnStream = new CoalesceStream(finalFileSize);
             foreach (var s in decryptedStreams)
             {
                 s.Seek(0, SeekOrigin.Begin);
-                s.CopyTo(returnStream);
+                // We know their block size isn't exceeding the max int
+                returnStream.Write(s.GetBuffer(), 0, (int)s.Length);
                 s.Dispose();
             }
 
