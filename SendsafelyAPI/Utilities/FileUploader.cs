@@ -104,7 +104,7 @@ namespace SendSafely.Utilities
 
             if (this.response == null)
             {
-                throw new ActionFailedException("NULL_RESPONSE", "The server response could not be parsed");
+                throw new ActionFailedException("NULL_RESPONSE", $"The server response could not be parsed.\n{responseStr}");
             }
 
             if (this.response.Response == APIResponse.AUTHENTICATION_FAILED)
